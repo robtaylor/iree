@@ -18,7 +18,7 @@ namespace mlir::iree_compiler::IREE::GPU {
 /// specified target.
 LogicalResult setDataTiledMultiMmaLoweringConfig(
     IREE::GPU::TargetAttr target, mlir::FunctionOpInterface entryPoint,
-    Operation *op, IREE::Codegen::UKernelDescriptorAttr ukernelConfig);
+    Operation *op, IREE::GPU::UKernelConfigAttr ukernelConfig);
 
 /// Helper for setting up a convolution config using IGEMM based on the
 /// specified target.
