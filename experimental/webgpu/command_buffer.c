@@ -621,7 +621,7 @@ static iree_status_t iree_hal_webgpu_command_buffer_fill_buffer(
   // we dispatch our own fill emulation shader.
   uint32_t zero_pattern = 0;
   if (memcmp(&dword_pattern, &zero_pattern, pattern_length) == 0 &&
-      target_offset % 4 == 0 && length % 4 == 0) {
+      target_offset % 4 == 0 && target_ref.length % 4 == 0) {
     WGPUCommandEncoder command_encoder = NULL;
     IREE_RETURN_IF_ERROR(iree_hal_webgpu_command_buffer_acquire_command_encoder(
         command_buffer, &command_encoder));
@@ -629,8 +629,8 @@ static iree_status_t iree_hal_webgpu_command_buffer_fill_buffer(
     wgpuCommandEncoderClearBuffer(
         command_encoder,
         iree_hal_webgpu_buffer_handle(
-            iree_hal_buffer_allocated_buffer(target_buffer)),
-        target_offset, length);
+            iree_hal_buffer_allocated_buffer(target_ref.buffer)),
+        target_offset, target_ref.length);
     return iree_ok_status();
   }
 
@@ -711,7 +711,7 @@ static iree_status_t iree_hal_webgpu_command_buffer_update_buffer(
     // to a handful of KB so that's not really our biggest inefficiency.
     uint8_t* storage_buffer = storage_base + sizeof(*segment);
     memcpy(storage_buffer, (const uint8_t*)source_buffer + source_offset,
-           length);
+           target_ref.length);
 
     // Attach the write_buffer segment.
     segment = (iree_hal_webgpu_command_segment_t*)storage_base;
