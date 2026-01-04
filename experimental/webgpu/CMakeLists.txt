@@ -52,9 +52,14 @@ iree_cc_library(
     iree::hal::utils::file_transfer
     iree::hal::utils::files
     iree::hal::utils::queue_emulation
-    iree::hal::utils::queue_host_call_emulation
     iree::schemas::webgpu_executable_def_c_fbs
   PUBLIC
 )
+
+# queue_host_call_emulation requires threading support
+if(IREE_ENABLE_THREADING)
+  target_link_libraries(iree_experimental_webgpu_webgpu
+    PUBLIC iree::hal::utils::queue_host_call_emulation)
+endif()
 
 ### BAZEL_TO_CMAKE_PRESERVES_ALL_CONTENT_BELOW_THIS_LINE ###

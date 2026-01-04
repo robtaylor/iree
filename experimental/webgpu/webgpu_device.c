@@ -23,7 +23,9 @@
 #include "iree/hal/utils/file_registry.h"
 #include "iree/hal/utils/file_transfer.h"
 #include "iree/hal/utils/queue_emulation.h"
+#if IREE_THREADING_ENABLE
 #include "iree/hal/utils/queue_host_call_emulation.h"
+#endif  // IREE_THREADING_ENABLE
 
 //===----------------------------------------------------------------------===//
 // iree_hal_webgpu_device_t
@@ -452,6 +454,21 @@ static iree_status_t iree_hal_webgpu_device_profiling_end(
   return iree_ok_status();
 }
 
+#if !IREE_THREADING_ENABLE
+// Stub implementation for builds without threading support.
+// Host calls require threading for proper async execution.
+static iree_status_t iree_hal_webgpu_device_queue_host_call_unsupported(
+    iree_hal_device_t* device, iree_hal_queue_affinity_t queue_affinity,
+    const iree_hal_semaphore_list_t wait_semaphore_list,
+    const iree_hal_semaphore_list_t signal_semaphore_list,
+    iree_hal_host_call_t call, const uint64_t args[4],
+    iree_hal_host_call_flags_t flags) {
+  return iree_make_status(
+      IREE_STATUS_UNIMPLEMENTED,
+      "queue_host_call requires threading support which is not enabled");
+}
+#endif  // !IREE_THREADING_ENABLE
+
 const iree_hal_device_vtable_t iree_hal_webgpu_device_vtable = {
     .destroy = iree_hal_webgpu_device_destroy,
     .id = iree_hal_webgpu_device_id,
@@ -476,7 +493,11 @@ const iree_hal_device_vtable_t iree_hal_webgpu_device_vtable = {
     .queue_copy = iree_hal_device_queue_emulated_copy,
     .queue_read = iree_hal_webgpu_device_queue_read,
     .queue_write = iree_hal_webgpu_device_queue_write,
+#if IREE_THREADING_ENABLE
     .queue_host_call = iree_hal_device_queue_emulated_host_call,
+#else
+    .queue_host_call = iree_hal_webgpu_device_queue_host_call_unsupported,
+#endif  // IREE_THREADING_ENABLE
     .queue_dispatch = iree_hal_device_queue_emulated_dispatch,
     .queue_execute = iree_hal_webgpu_device_queue_execute,
     .queue_flush = iree_hal_webgpu_device_queue_flush,
